@@ -2,12 +2,10 @@
   width: 100%;
   margin: 0 auto;
   padding: 0rem;
-  text-align: center;
 }
 
 .App {
   font-family: sans-serif;
-  text-align: center;
   height: 100vh;
   display: flex;
   flex-direction: column;

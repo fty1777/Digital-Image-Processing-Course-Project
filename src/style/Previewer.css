@@ -1,0 +1,14 @@
+.image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+.image-container img {
+  border: 1.5px solid #000;
+  /* fit to width or height and keep ratio */
+  max-height: 100%;
+  max-width: 100%;
+}

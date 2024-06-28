@@ -1,11 +1,11 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import '@mantine/core/styles.css';
-
 import { createTheme, MantineProvider } from '@mantine/core';
-import Previewer from './Previewer.jsx'
+
+import Previewer from './Previewer';
+import { FileInfoProvider } from './contexts/FileInfoContext';
+import { TabsLayoutProvider } from './contexts/TabsLayoutContext';
+
+import '@mantine/core/styles.css';
+import './style/App.css';
 
 // Your theme configuration is merged with default theme
 const theme = createTheme({
@@ -14,15 +14,17 @@ const theme = createTheme({
 });
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <MantineProvider theme={theme}>
-      <div className="App">
-        <main className="App-main">
-          <Previewer />
-        </main>
-      </div>
+      <FileInfoProvider>
+        <TabsLayoutProvider>
+          <div className="App">
+            <main className="App-main">
+              <Previewer />
+            </main>
+          </div>
+        </TabsLayoutProvider>
+      </FileInfoProvider>
     </MantineProvider>
   )
 }
