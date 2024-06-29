@@ -37,7 +37,7 @@ const initConf = {
       children: [
         {
           type: "tab",
-          name: "Explorer",
+          name: "文件夹",
           altName: "The Explorer Tab",
           component: "file_explorer",
           enableClose: false,
@@ -46,7 +46,7 @@ const initConf = {
         },
         {
           type: "tab",
-          name: "History",
+          name: "编辑历史",
           altName: "The Edit History Tab",
           component: "edit_history",
           enableClose: false,

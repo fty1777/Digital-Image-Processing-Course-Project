@@ -7,7 +7,7 @@
     "distDir": "../build"
   },
   "package": {
-    "productName": "Digital Image Processing",
+    "productName": "数字图像处理",
     "version": "0.1.0"
   },
   "tauri": {
@@ -80,7 +80,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "Digital Image Processing",
+        "title": "数字图像处理",
         "width": 800
       }
     ]

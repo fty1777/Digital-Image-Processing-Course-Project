@@ -1,21 +1,26 @@
-import React, { useEffect, useContext, useState } from 'react';
-import { open } from '@tauri-apps/api/dialog';
-import { invoke } from '@tauri-apps/api/tauri';
+import React, { useEffect, useContext, useState } from "react";
+import { open } from "@tauri-apps/api/dialog";
+import { invoke } from "@tauri-apps/api/tauri";
 
-import { Actions } from 'flexlayout-react';
+import { Actions } from "flexlayout-react";
 import TreeView, { flattenTree } from "react-accessible-treeview";
-import { FaFolderOpen, FaFolderClosed, FaFileImage, FaFile } from "react-icons/fa6";
-import { Button } from '@mantine/core';
+import {
+  FaFolderOpen,
+  FaFolderClosed,
+  FaFileImage,
+  FaFile,
+} from "react-icons/fa6";
+import { Flex, Button, ActionIcon, Space } from "@mantine/core";
+import { IconReload, IconAlarm } from "@tabler/icons-react";
 
-import { FileInfoContext } from './contexts/FileInfoContext';
-import { TabsLayoutContext } from './contexts/TabsLayoutContext';
+import { FileInfoContext } from "./contexts/FileInfoContext";
+import { TabsLayoutContext } from "./contexts/TabsLayoutContext";
 
-import './style/Treeview.css';
-
+import "./style/Treeview.css";
 
 const folderColor = "black";
 const imageFileColor = "red";
-const otherFileColor = "grey"
+const otherFileColor = "grey";
 
 const FolderIcon = ({ isOpen }) =>
   isOpen ? (
@@ -31,13 +36,13 @@ const FileIcon = ({ filename }) => {
     case "jpg":
     case "jpeg":
     case "raw":
-      return <FaFileImage color={imageFileColor} className="icon" />
+      return <FaFileImage color={imageFileColor} className="icon" />;
     default:
       return <FaFile color={otherFileColor} className="icon" />;
   }
 };
 
-function sortTree(node) {
+async function sortTree(node) {
   if (node.children && Array.isArray(node.children)) {
     // Sort the children
     node.children.sort((a, b) => {
@@ -48,14 +53,13 @@ function sortTree(node) {
       // Place nodes with children at the beginning
       return (b.children ? 1 : 0) - (a.children ? 1 : 0);
     });
-    
+
     // Recursively sort the children of each child node
     node.children.forEach(sortTree);
   }
 }
 
 function FileExplorer() {
-
   const {
     openedFolderState,
     folderTreeState,
@@ -65,36 +69,41 @@ function FileExplorer() {
   } = useContext(FileInfoContext);
   const { tabsModel, tabsLayoutRef } = useContext(TabsLayoutContext);
 
-  const [openedFolder, setFolder] = openedFolderState;
+  const [openedFolder, setOpenedFolder] = openedFolderState;
   const [folderTree, setFolderTree] = folderTreeState;
   const [openedFiles, setOpenedFiles] = openedFilesState;
   const [historyTrees, setHistoryTrees] = historyTreesState;
   const [currentFile, setCurrentFile] = currentFileState;
   const [layoutRef, setLayoutRef] = useState();
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     setLayoutRef(tabsLayoutRef);
   }, [tabsLayoutRef]);
 
+  useEffect(() => {
+    if (isLoading) {
+      setIsLoading(false);
+    }
+  }, [folderTree]);
+
   const fetchTreeData = async () => {
+    setIsLoading(true);
     if (openedFolder === null) {
-      setFolderTree(flattenTree({
-        name: "",
-        children: []
-      }));
+      setFolderTree(flattenTree({ name: "", children: [] }));
       return;
     }
-    invoke('read_folder', { path: openedFolder }).then((result) => {
-      result = {
-        name: "",
-        children: result
-      }
-      sortTree(result)
-      setFolderTree(flattenTree(result));
-      console.log('Directory tree fetched:', result);
-    }).catch((error) => {
-      console.error('Failed to fetch directory tree:', error);
-    })
+    invoke("read_folder", { path: openedFolder })
+      .then((result) => {
+        result = { name: "", children: result };
+        sortTree(result).then(() => {
+          setFolderTree(flattenTree(result));
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to fetch directory tree:", error);
+      });
   };
 
   useEffect(() => {
@@ -103,30 +112,51 @@ function FileExplorer() {
 
   return (
     <div className="ide-container">
-      <div className='open-folder-button-container'>
+      <Flex gap="5">
         <Button
+          h={30}
+          dir="rtl"
           fullWidth
           variant="filled"
-          color='#909090'
-          size="compact-sm"
+          color="#909090"
           radius="xs"
-          loading={folderTree === null}
+          loading={isLoading}
           onClick={async () => {
             open({
               directory: true,
               multiple: false,
-            }).then((folderPath) => {
-              console.log(folderPath)
-              if (folderPath !== null) {
-                setFolder(folderPath);
-              }
-            }).catch((error) => {
-              console.log('Error opening folder:', error);
             })
-          }} >
-          Open Folder...
+              .then((folderPath) => {
+                console.log(folderPath);
+                if (folderPath !== null) {
+                  setOpenedFolder(folderPath);
+                }
+              })
+              .catch((error) => {
+                console.log("Error opening folder:", error);
+              });
+          }}
+        >
+          {openedFolder || "打开文件夹"}
         </Button>
-      </div>
+        <ActionIcon
+          flex="none"
+          h={30}
+          w={30}
+          variant="filled"
+          radius="xs"
+          color="#909090"
+          className="reload-button"
+        >
+          <IconReload
+            width={"60%"}
+            height={"60%"}
+            stroke={2.5}
+            onClick={fetchTreeData}
+          />
+        </ActionIcon>
+      </Flex>
+      <Space h="5" />
       {folderTree !== null && (
         <div className="ide">
           <TreeView
@@ -142,7 +172,10 @@ function FileExplorer() {
               level,
               handleSelect,
             }) => (
-              <div {...getNodeProps()} style={{ paddingLeft: 20 * (level - 1) }}>
+              <div
+                {...getNodeProps()}
+                style={{ paddingLeft: 20 * (level - 1) }}
+              >
                 {isBranch ? (
                   <FolderIcon isOpen={isExpanded} />
                 ) : (
@@ -163,32 +196,42 @@ function FileExplorer() {
                     tabsModel.doAction(Actions.selectTab(openedFiles[path]));
                     return;
                   }
-                  invoke('open_image', { path }).then((imgBase64) => {
-                    let targetTabset = tabsModel.getActiveTabset() || tabsModel.getFirstTabSet();
-                    let node = layoutRef.current.addTabToTabSet(targetTabset.getId(),
-                      {
-                        component: "img",
-                        name: filename,
-                        config: {
-                          data: imgBase64,
-                          path,
-                        },
-                      })
-                    let id = node.getId();
-                    openedFiles[path] = id;
-                    setOpenedFiles(openedFiles);
-                    historyTrees[path] = {
-                      name: '',
-                      children: [{
-                        name: `(root)${filename}`,
-                        children: [],
-                        metadata: { imgBase64 },
-                      }],
-                    };
-                    setHistoryTrees(historyTrees);
-                  }).catch((error) => {
-                    console.log(`Error loading image "${path}", ${error}`);
-                  })
+                  invoke("open_image", { path })
+                    .then((imgBase64) => {
+                      let targetTabset =
+                        tabsModel.getActiveTabset() ||
+                        tabsModel.getFirstTabSet();
+                      let node = layoutRef.current.addTabToTabSet(
+                        targetTabset.getId(),
+                        {
+                          component: "img",
+                          name: filename,
+                          config: {
+                            data: imgBase64,
+                            filename,
+                            path,
+                          },
+                        }
+                      );
+                      let id = node.getId();
+                      openedFiles[path] = id;
+                      setOpenedFiles(openedFiles);
+                      historyTrees[path] = {
+                        name: "",
+                        children: [
+                          {
+                            name: `(root)${filename}`,
+                            id: id,
+                            children: [],
+                            metadata: { img: imgBase64, path },
+                          },
+                        ],
+                      };
+                      // setHistoryTrees(historyTrees);
+                    })
+                    .catch((error) => {
+                      console.log(`Error loading image "${path}", ${error}`);
+                    });
                 }
               }
             }}
@@ -196,7 +239,7 @@ function FileExplorer() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default FileExplorer
+export default FileExplorer;

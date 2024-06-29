@@ -8,7 +8,7 @@
 
 .ide {
   font-family: monospace;
-  font-size: 16px;
+  font-size: 14px;
   user-select: none;
   /* border-radius: 0.4em; */
   overflow: auto;
@@ -55,12 +55,8 @@
 .ide .icon {
   vertical-align: middle;
   margin-right: 5px;
-}
-
-.open-folder-button-container {
-  width: 100%;
-  height: fit-content;
-  padding-bottom: 5px;
+  width: 15px;
+  height: 15px;
 }
 
 .empty-tree {
@@ -72,4 +68,8 @@
   width: 100%;
   color: grey;
   text-align: center;
+}
+
+.empty-tree p {
+  margin: 0;
 }

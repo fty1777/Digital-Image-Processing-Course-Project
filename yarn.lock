@@ -596,6 +596,18 @@
   resolved "https://registry.yarnpkg.com/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.18.0.tgz#5d694d345ce36b6ecf657349e03eb87297e68da4"
   integrity sha512-UOo5FdvOL0+eIVTgS4tIdbW+TtnBLWg1YBCcU2KWM7nuNwRz9bksDX1bekJJCpu25N1DVWaCwnT39dVQxzqS8g==
 
+"@tabler/icons-react@^3.7.0":
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/@tabler/icons-react/-/icons-react-3.7.0.tgz#cee199cec5a5cf463ea5a8a88e10ccb6476e77a1"
+  integrity sha512-8AU4oO9pgLhHLOSGAJIsRhsTy7w8D7uKBlR0DIFxaILFA1fe2rC4wrNGYUtIFei82y41OuXz9vMk0Oe+IWT3SA==
+  dependencies:
+    "@tabler/icons" "3.7.0"
+
+"@tabler/icons@3.7.0":
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-3.7.0.tgz#b522723844644b50ccaddd0fd19a91c0eb3095da"
+  integrity sha512-lJGIZLSWrPO6VygRUbaVvQjWgL2EaiBMD8e6leCYUQ8ZPO4LIzKMq358C8KlhXJcyNiRz1Io3YWoc/DNTcWqSg==
+
 "@tauri-apps/api@^1.5.6":
   version "1.5.6"
   resolved "https://registry.yarnpkg.com/@tauri-apps/api/-/api-1.5.6.tgz#7496d79f6586659a59bc6e9d6666eed8d24dc6da"
