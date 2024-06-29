@@ -1,26 +1,14 @@
-use image::{DynamicImage, GenericImageView, GrayImage, ImageBuffer, Luma, Pixel, Rgb, RgbImage};
+use image::{DynamicImage, Rgb, RgbImage};
 
-fn max_dimensions(img1: &RgbImage, img2: &RgbImage) -> (u32, u32) {
-    let width = img1.width().max(img2.width());
-    let height = img1.height().max(img2.height());
-    (width, height)
-}
-
-fn get_pixel(img: &RgbImage, x: u32, y: u32) -> Rgb<u8> {
-    if x < img.width() && y < img.height() {
-        *img.get_pixel(x, y)
-    } else {
-        Rgb([0, 0, 0])
-    }
-}
+use crate::transform::utils::{get_pixel_rgb, max_dimensions};
 
 fn add(img1: &RgbImage, img2: &RgbImage) -> RgbImage {
     let (width, height) = max_dimensions(img1, img2);
     let mut result = RgbImage::new(width, height);
     for x in 0..width {
         for y in 0..height {
-            let p1 = get_pixel(img1, x, y).0;
-            let p2 = get_pixel(img2, x, y).0;
+            let p1 = get_pixel_rgb(img1, x, y).0;
+            let p2 = get_pixel_rgb(img2, x, y).0;
             result.put_pixel(
                 x,
                 y,
@@ -40,8 +28,8 @@ fn sub(img1: &RgbImage, img2: &RgbImage) -> RgbImage {
     let mut result = RgbImage::new(width, height);
     for x in 0..width {
         for y in 0..height {
-            let p1 = get_pixel(img1, x, y).0;
-            let p2 = get_pixel(img2, x, y).0;
+            let p1 = get_pixel_rgb(img1, x, y).0;
+            let p2 = get_pixel_rgb(img2, x, y).0;
             result.put_pixel(
                 x,
                 y,
@@ -61,8 +49,8 @@ fn mul(img1: &RgbImage, img2: &RgbImage) -> RgbImage {
     let mut result = RgbImage::new(width, height);
     for x in 0..width {
         for y in 0..height {
-            let p1 = get_pixel(img1, x, y).0;
-            let p2 = get_pixel(img2, x, y).0;
+            let p1 = get_pixel_rgb(img1, x, y).0;
+            let p2 = get_pixel_rgb(img2, x, y).0;
             result.put_pixel(
                 x,
                 y,
@@ -82,8 +70,8 @@ fn div(img1: &RgbImage, img2: &RgbImage) -> RgbImage {
     let mut result = RgbImage::new(width, height);
     for x in 0..width {
         for y in 0..height {
-            let p1 = get_pixel(img1, x, y).0;
-            let p2 = get_pixel(img2, x, y).0;
+            let p1 = get_pixel_rgb(img1, x, y).0;
+            let p2 = get_pixel_rgb(img2, x, y).0;
             result.put_pixel(
                 x,
                 y,

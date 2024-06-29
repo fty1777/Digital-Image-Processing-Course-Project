@@ -25,13 +25,13 @@ pub fn to_binary(img: DynamicImage, threshold: Option<f32>) -> DynamicImage {
 
 pub fn invert(img: DynamicImage) -> DynamicImage {
     match img {
-        DynamicImage::ImageLuma8(img) => invert_gray(DynamicImage::ImageLuma8(img)),
-        DynamicImage::ImageRgb8(img) => invert_rgb(DynamicImage::ImageRgb8(img)),
-        _ => invert_rgb(img),
+        DynamicImage::ImageLuma8(img) => invert_impl_gray(DynamicImage::ImageLuma8(img)),
+        DynamicImage::ImageRgb8(img) => invert_impl_rgb(DynamicImage::ImageRgb8(img)),
+        _ => invert_impl_rgb(img),
     }
 }
 
-fn invert_rgb(img: DynamicImage) -> DynamicImage {
+fn invert_impl_rgb(img: DynamicImage) -> DynamicImage {
     let mut img = img.to_rgb8();
     for pixel in img.pixels_mut() {
         pixel.0.iter_mut().for_each(|p| *p = 255 - *p);
@@ -39,7 +39,7 @@ fn invert_rgb(img: DynamicImage) -> DynamicImage {
     DynamicImage::ImageRgb8(img)
 }
 
-fn invert_gray(img: DynamicImage) -> DynamicImage {
+fn invert_impl_gray(img: DynamicImage) -> DynamicImage {
     let mut img = img.to_luma8();
     for pixel in img.pixels_mut() {
         pixel[0] = 255 - pixel[0];
@@ -50,13 +50,17 @@ fn invert_gray(img: DynamicImage) -> DynamicImage {
 pub fn exponential(img: DynamicImage, exponent: Option<f32>) -> DynamicImage {
     let exponent = exponent.unwrap_or(1.0);
     match img {
-        DynamicImage::ImageLuma8(img) => exponential_gray(DynamicImage::ImageLuma8(img), exponent),
-        DynamicImage::ImageRgb8(img) => exponential_rgb(DynamicImage::ImageRgb8(img), exponent),
-        _ => exponential_rgb(img, exponent),
+        DynamicImage::ImageLuma8(img) => {
+            exponential_impl_gray(DynamicImage::ImageLuma8(img), exponent)
+        }
+        DynamicImage::ImageRgb8(img) => {
+            exponential_impl_rgb(DynamicImage::ImageRgb8(img), exponent)
+        }
+        _ => exponential_impl_rgb(img, exponent),
     }
 }
 
-fn exponential_rgb(img: DynamicImage, exponent: f32) -> DynamicImage {
+fn exponential_impl_rgb(img: DynamicImage, exponent: f32) -> DynamicImage {
     println!("Exponentiating image, exponent: {}", exponent);
     let img = img.to_rgb8();
     let (width, height) = img.dimensions();
@@ -74,7 +78,7 @@ fn exponential_rgb(img: DynamicImage, exponent: f32) -> DynamicImage {
     DynamicImage::ImageRgb8(exp_img)
 }
 
-fn exponential_gray(img: DynamicImage, exponent: f32) -> DynamicImage {
+fn exponential_impl_gray(img: DynamicImage, exponent: f32) -> DynamicImage {
     let img = img.to_luma8();
     let (width, height) = img.dimensions();
     let mut exp_img = GrayImage::new(width, height);

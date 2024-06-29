@@ -42,35 +42,14 @@ pub fn create_menu() -> Result<Menu, String> {
             .add_item(CustomMenuItem::new("binary_op/div".to_string(), "图像相除")),
     );
 
-    let interpolation_menu = Submenu::new(
-        "插值",
-        Menu::new()
-            .add_item(CustomMenuItem::new(
-                "interpolate/nearest".to_string(),
-                "最近邻",
-            ))
-            .add_item(CustomMenuItem::new(
-                "interpolate/bilinear".to_string(),
-                "双线性",
-            ))
-            .add_item(CustomMenuItem::new(
-                "interpolate/bicubic".to_string(),
-                "双三次",
-            )),
-    );
-
     let filter_menu = Submenu::new(
-        "滤波",
+        "空域滤波",
         Menu::new()
             .add_item(CustomMenuItem::new("filter/mean".to_string(), "均值滤波"))
             .add_item(CustomMenuItem::new("filter/median".to_string(), "中值滤波"))
             .add_item(CustomMenuItem::new(
                 "filter/gaussian".to_string(),
                 "高斯滤波",
-            ))
-            .add_item(CustomMenuItem::new(
-                "filter/homomorphic".to_string(),
-                "同态滤波",
             ))
             .add_item(CustomMenuItem::new(
                 "filter/sobel_sharpen".to_string(),
@@ -87,26 +66,21 @@ pub fn create_menu() -> Result<Menu, String> {
             .add_item(CustomMenuItem::new(
                 "filter/roberts_sharpen".to_string(),
                 "Roberts锐化",
-            )),
-    );
-
-    let border_menu = Submenu::new(
-        "边缘检测",
-        Menu::new()
+            ))
             .add_item(CustomMenuItem::new(
-                "border/sobel".to_string(),
+                "filter/sobel".to_string(),
                 "Sobel边缘检测",
             ))
             .add_item(CustomMenuItem::new(
-                "border/laplacian".to_string(),
+                "filter/laplacian".to_string(),
                 "Laplacian边缘检测",
             ))
             .add_item(CustomMenuItem::new(
-                "border/prewitt".to_string(),
+                "filter/prewitt".to_string(),
                 "Prewitt边缘检测",
             ))
             .add_item(CustomMenuItem::new(
-                "border/roberts".to_string(),
+                "filter/roberts".to_string(),
                 "Roberts边缘检测",
             )),
     );
@@ -137,6 +111,10 @@ pub fn create_menu() -> Result<Menu, String> {
             .add_item(CustomMenuItem::new(
                 "fft/log_enhance".to_string(),
                 "对数增强",
+            ))
+            .add_item(CustomMenuItem::new(
+                "filter/homomorphic".to_string(),
+                "同态滤波",
             )),
     );
 
@@ -152,9 +130,7 @@ pub fn create_menu() -> Result<Menu, String> {
         .add_submenu(geometric_menu)
         .add_submenu(color_menu)
         .add_submenu(binary_op_menu)
-        .add_submenu(interpolation_menu)
         .add_submenu(filter_menu)
-        .add_submenu(border_menu)
         .add_submenu(fft_menu)
         .add_submenu(fourier_desc_menu);
 
