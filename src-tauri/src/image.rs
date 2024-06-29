@@ -1,4 +1,7 @@
-use crate::transform::color_transform;
+use crate::transform::{
+    binary_op_transform, border_transform, color_transform, fft_transform, filter_transform,
+    geometic_transform,
+};
 
 use base64::engine::general_purpose::STANDARD;
 use base64::Engine;
@@ -29,7 +32,8 @@ pub fn encode_image_to_base64(img: DynamicImage) -> Result<String, String> {
 
 #[tauri::command]
 pub fn open_image(path: String) -> Result<String, String> {
-    let img = read_image(path)?;
+    // Always open in RGB8 format
+    let img = DynamicImage::ImageRgb8(read_image(path)?.to_rgb8());
     let base64_img = encode_image_to_base64(img)?;
     Ok(base64_img)
 }
@@ -48,7 +52,41 @@ pub fn transform_image(
         "color/hist_equalize" => color_transform::hist_equalize(img),
         "color/to_gray" => color_transform::to_gray(img),
         "color/to_binary" => color_transform::to_binary(img, transform_arg.parse::<f32>().ok()),
-
+        "geometric/translate" => {
+            let args: Vec<&str> = transform_arg.split(',').map(|s| s.trim()).collect();
+            if args.len() != 2 {
+                return Err("Invalid arguments for translate".to_string());
+            }
+            geometic_transform::translate(
+                img,
+                args[0].parse::<i32>().ok(),
+                args[1].parse::<i32>().ok(),
+            )
+        }
+        "geometric/rotate" => geometic_transform::rotate(img, transform_arg.parse::<f32>().ok()),
+        "geometric/resize" => {
+            let args: Vec<&str> = transform_arg.split(',').map(|s| s.trim()).collect();
+            if args.len() != 2 {
+                return Err("Invalid arguments for resize".to_string());
+            }
+            geometic_transform::resize(
+                img,
+                args[0].parse::<u32>().ok(),
+                args[1].parse::<u32>().ok(),
+            )
+        }
+        "geometric/mirror" => geometic_transform::mirror(img, transform_arg.as_str()),
+        "geometric/stretch" => {
+            let args: Vec<&str> = transform_arg.split(',').map(|s| s.trim()).collect();
+            if args.len() != 2 {
+                return Err("Invalid arguments for stretch".to_string());
+            }
+            geometic_transform::stretch(
+                img,
+                args[0].parse::<f32>().ok(),
+                args[1].parse::<f32>().ok(),
+            )
+        }
         _ => return Err("Invalid transform".to_string()),
     };
 

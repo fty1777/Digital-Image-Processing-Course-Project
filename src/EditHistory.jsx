@@ -14,12 +14,11 @@ import {
   IconArrowDownRight,
 } from "@tabler/icons-react";
 
+import { searchTreeNodeById } from "./utils";
+
 import "./style/Treeview.css";
 
 const iconColor = "black";
-// const BranchIcon = ({ isOpen }) => (
-//   <IconArrowDownRight color={iconColor} className="icon" />
-// );
 
 const BranchIcon = ({ isOpen }) =>
   isOpen ? (
@@ -29,24 +28,6 @@ const BranchIcon = ({ isOpen }) =>
   );
 
 const LeafIcon = () => <IconPoint color={iconColor} className="icon" />;
-
-function searchTreeNode(tree, id) {
-  if (tree.id === id) {
-    return tree;
-  }
-
-  if (tree.children && Array.isArray(tree.children)) {
-    for (let child of tree.children) {
-      let result = searchTreeNode(child, id);
-      if (result) {
-        return result;
-      }
-    }
-  }
-
-  // If no matching node is found, return null
-  return null;
-}
 
 function EditHistory() {
   const {
@@ -60,6 +41,7 @@ function EditHistory() {
   const [historyTrees, setHistoryTrees] = historyTreesState;
   const [historyTree, setHistoryTree] = useState(null);
   const [currentFile, setCurrentFile] = currentFileState;
+  const [openedFiles, setOpenedFiles] = openedFilesState;
   const [layoutRef, setLayoutRef] = useState();
 
   useEffect(() => {
@@ -84,7 +66,6 @@ function EditHistory() {
         {historyTree ? (
           <TreeView
             data={historyTree}
-            // expandedIds={historyTree.map(({ id }) => id)}
             aria-label="history tree"
             clickAction="EXCLUSIVE_SELECT"
             nodeRenderer={({
@@ -108,9 +89,10 @@ function EditHistory() {
               let id = element.id;
               tabsModel.doAction(Actions.selectTab(id));
               let selectedNode = tabsModel.getActiveTabset()?.getSelectedNode();
+              let path = selectedNode.getConfig().path;
               if (selectedNode.getId() === id) {
                 setCurrentFile({
-                  path: selectedNode.getConfig().path,
+                  path,
                   tabId: id,
                 });
               } else {
@@ -130,7 +112,7 @@ function EditHistory() {
                     },
                   })
                   .getId();
-                let treeNode = searchTreeNode(historyTrees[path], id);
+                let treeNode = searchTreeNodeById(historyTrees[path], id);
                 treeNode.id = newId;
                 setCurrentFile({
                   path,

@@ -33,7 +33,7 @@ pub fn create_menu() -> Result<Menu, String> {
             )),
     );
 
-    let binary_menu = Submenu::new(
+    let binary_op_menu = Submenu::new(
         "二元运算",
         Menu::new()
             .add_item(CustomMenuItem::new("binary_op/add".to_string(), "图像相加"))
@@ -90,7 +90,7 @@ pub fn create_menu() -> Result<Menu, String> {
             )),
     );
 
-    let edge_menu = Submenu::new(
+    let border_menu = Submenu::new(
         "边缘检测",
         Menu::new()
             .add_item(CustomMenuItem::new(
@@ -151,10 +151,10 @@ pub fn create_menu() -> Result<Menu, String> {
     let menu = Menu::os_default("数字图像处理")
         .add_submenu(geometric_menu)
         .add_submenu(color_menu)
-        .add_submenu(binary_menu)
+        .add_submenu(binary_op_menu)
         .add_submenu(interpolation_menu)
         .add_submenu(filter_menu)
-        .add_submenu(edge_menu)
+        .add_submenu(border_menu)
         .add_submenu(fft_menu)
         .add_submenu(fourier_desc_menu);
 

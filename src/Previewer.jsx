@@ -1,9 +1,10 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
 
 import { useDisclosure } from "@mantine/hooks";
 import { Actions, Layout } from "flexlayout-react";
 import "flexlayout-react/style/light.css";
+import { Stack, Center } from "@mantine/core";
 
 import FileExplorer from "./FileExplorer";
 import EditHistory from "./EditHistory";
@@ -48,6 +49,37 @@ function Previewer() {
     closeTransformDialog();
   };
 
+  const getImageDimensions = (base64) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({ width: img.width, height: img.height });
+      };
+      img.src = `data:image/bmp;base64,${base64}`;
+    });
+  };
+
+  const ImageWithSize = ({ config }) => {
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+    useEffect(() => {
+      (async () => {
+        const dims = await getImageDimensions(config.data);
+        console.log("Image Dimensions:", dims);
+        setDimensions(dims);
+      })();
+    }, [config]);
+
+    return (
+      <div className="image-container">
+        <img src={`data:image/bmp;base64,${config.data}`} alt={config.name} />
+        <p className="image-size">
+          {dimensions.width} x {dimensions.height}
+        </p>
+      </div>
+    );
+  };
+
   const factory = (node) => {
     const component = node.getComponent();
 
@@ -57,11 +89,6 @@ function Previewer() {
       case "img":
         let config = node.getConfig();
         node.setEventListener("close", (p) => {
-          delete openedFiles[config.path];
-          // setOpenedFiles(openedFiles);
-          // delete historyTrees[config.path];
-          // setHistoryTrees(historyTrees);
-
           let activeTabset = tabsModel.getActiveTabset();
           if (activeTabset.getSelectedNode() === undefined) {
             activeTabset = tabsModel.getFirstTabSet();
@@ -81,14 +108,7 @@ function Previewer() {
             });
           }
         });
-        return (
-          <div className="image-container">
-            <img
-              src={`data:image/bmp;base64,${config.data}`}
-              alt={node.getName()}
-            />
-          </div>
-        );
+        return <ImageWithSize config={config} />;
       case "file_explorer":
         return <FileExplorer />;
       case "edit_history":
@@ -103,6 +123,7 @@ function Previewer() {
       <TransformDialog
         transform={transform}
         selectedTabNode={selectedTabNode}
+        setSelectedTabNode={setSelectedTabNode}
         opened={transformDialogOpened}
         onClose={onDialogClose}
       />

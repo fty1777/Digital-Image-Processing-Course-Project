@@ -4,57 +4,25 @@ import { invoke } from "@tauri-apps/api/tauri";
 
 import { Actions } from "flexlayout-react";
 import TreeView, { flattenTree } from "react-accessible-treeview";
-import {
-  FaFolderOpen,
-  FaFolderClosed,
-  FaFileImage,
-  FaFile,
-} from "react-icons/fa6";
 import { Flex, Button, ActionIcon, Space } from "@mantine/core";
-import { IconReload, IconAlarm } from "@tabler/icons-react";
+import { IconReload } from "@tabler/icons-react";
+
+import { FolderIcon, FileIcon } from "./Icons";
 
 import { FileInfoContext } from "./contexts/FileInfoContext";
 import { TabsLayoutContext } from "./contexts/TabsLayoutContext";
 
 import "./style/Treeview.css";
 
-const folderColor = "black";
-const imageFileColor = "red";
-const otherFileColor = "grey";
-
-const FolderIcon = ({ isOpen }) =>
-  isOpen ? (
-    <FaFolderOpen color={folderColor} className="icon" />
-  ) : (
-    <FaFolderClosed color={folderColor} className="icon" />
-  );
-
-const FileIcon = ({ filename }) => {
-  const extension = filename.slice(filename.lastIndexOf(".") + 1);
-  switch (extension) {
-    case "bmp":
-    case "jpg":
-    case "jpeg":
-    case "raw":
-      return <FaFileImage color={imageFileColor} className="icon" />;
-    default:
-      return <FaFile color={otherFileColor} className="icon" />;
-  }
-};
-
 async function sortTree(node) {
   if (node.children && Array.isArray(node.children)) {
-    // Sort the children
     node.children.sort((a, b) => {
-      // If both have children or both don't have children, sort by name
       if ((a.children && b.children) || (!a.children && !b.children)) {
         return a.name.localeCompare(b.name);
       }
-      // Place nodes with children at the beginning
       return (b.children ? 1 : 0) - (a.children ? 1 : 0);
     });
 
-    // Recursively sort the children of each child node
     node.children.forEach(sortTree);
   }
 }
@@ -185,17 +153,37 @@ function FileExplorer() {
               </div>
             )}
             onNodeSelect={({ element, isBranch, isSelected, treeState }) => {
-              if (!isBranch) {
-                let filename = element.name;
-                let path = element.id;
-                console.log(filename, path);
-                const extension = filename.slice(filename.lastIndexOf(".") + 1);
-                console.log(extension);
-                if (extension === "bmp") {
-                  if (path in openedFiles) {
-                    tabsModel.doAction(Actions.selectTab(openedFiles[path]));
-                    return;
-                  }
+              if (isBranch) {
+                return;
+              }
+              let filename = element.name;
+              let path = element.id;
+              console.log(filename, path);
+              const extension = filename.slice(filename.lastIndexOf(".") + 1);
+              console.log(extension);
+              if (
+                extension === "bmp" ||
+                extension === "jpg" ||
+                extension === "jpeg"
+              ) {
+                if (path in historyTrees) {
+                  let treeNode = historyTrees[path].children[0];
+                  let targetTabset =
+                    tabsModel.getActiveTabset() || tabsModel.getFirstTabSet();
+                  let newId = layoutRef.current
+                    .addTabToTabSet(targetTabset.getId(), {
+                      component: "img",
+                      name: treeNode.name,
+                      config: {
+                        data: treeNode.metadata.img,
+                        path: treeNode.metadata.path,
+                      },
+                    })
+                    .getId();
+                  treeNode.id = newId;
+                  tabsModel.doAction(Actions.selectTab(openedFiles[path]));
+                  setCurrentFile({ path, tabId: openedFiles[path] });
+                } else {
                   invoke("open_image", { path })
                     .then((imgBase64) => {
                       let targetTabset =
@@ -220,14 +208,13 @@ function FileExplorer() {
                         name: "",
                         children: [
                           {
-                            name: `(root)${filename}`,
+                            name: `${filename}`,
                             id: id,
                             children: [],
                             metadata: { img: imgBase64, path },
                           },
                         ],
                       };
-                      // setHistoryTrees(historyTrees);
                     })
                     .catch((error) => {
                       console.log(`Error loading image "${path}", ${error}`);

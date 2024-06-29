@@ -1,4 +1,3 @@
-use image::imageops;
 use image::{DynamicImage, GrayImage, Luma, RgbImage};
 use imageproc;
 
