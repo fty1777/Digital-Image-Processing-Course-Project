@@ -1,6 +1,6 @@
 use crate::transform::{
     binary_op_transform, border_transform, color_transform, fft_transform, filter_transform,
-    geometic_transform,
+    geometric_transform,
 };
 
 use base64::engine::general_purpose::STANDARD;
@@ -40,12 +40,22 @@ pub fn open_image(path: String) -> Result<String, String> {
 
 #[tauri::command]
 pub fn transform_image(
-    img: String, // base64
+    img: String,  // base64
+    img2: String, // base64
     transform: String,
     transform_arg: String,
 ) -> Result<String, String> {
     let img = image::load_from_memory(&STANDARD.decode(img).unwrap())
         .map_err(|e| format!("Failed to load image from base64: {}", e))?;
+    // load to img2 but use Option to handle the case where img2 is empty
+    let img2 = if img2.is_empty() {
+        None
+    } else {
+        Some(
+            image::load_from_memory(&STANDARD.decode(img2).unwrap())
+                .map_err(|e| format!("Failed to load image from base64: {}", e))?,
+        )
+    };
     let transformed_img = match transform.as_str() {
         "color/invert" => color_transform::invert(img),
         "color/exponential" => color_transform::exponential(img, transform_arg.parse::<f32>().ok()),
@@ -57,36 +67,40 @@ pub fn transform_image(
             if args.len() != 2 {
                 return Err("Invalid arguments for translate".to_string());
             }
-            geometic_transform::translate(
+            geometric_transform::translate(
                 img,
                 args[0].parse::<i32>().ok(),
                 args[1].parse::<i32>().ok(),
             )
         }
-        "geometric/rotate" => geometic_transform::rotate(img, transform_arg.parse::<f32>().ok()),
+        "geometric/rotate" => geometric_transform::rotate(img, transform_arg.parse::<f32>().ok()),
         "geometric/resize" => {
             let args: Vec<&str> = transform_arg.split(',').map(|s| s.trim()).collect();
             if args.len() != 2 {
                 return Err("Invalid arguments for resize".to_string());
             }
-            geometic_transform::resize(
+            geometric_transform::resize(
                 img,
                 args[0].parse::<u32>().ok(),
                 args[1].parse::<u32>().ok(),
             )
         }
-        "geometric/mirror" => geometic_transform::mirror(img, transform_arg.as_str()),
+        "geometric/mirror" => geometric_transform::mirror(img, transform_arg.as_str()),
         "geometric/stretch" => {
             let args: Vec<&str> = transform_arg.split(',').map(|s| s.trim()).collect();
             if args.len() != 2 {
                 return Err("Invalid arguments for stretch".to_string());
             }
-            geometic_transform::stretch(
+            geometric_transform::stretch(
                 img,
                 args[0].parse::<f32>().ok(),
                 args[1].parse::<f32>().ok(),
             )
         }
+        "binary_op/add" => binary_op_transform::binary_op(img, img2.unwrap(), "add"),
+        "binary_op/sub" => binary_op_transform::binary_op(img, img2.unwrap(), "sub"),
+        "binary_op/mul" => binary_op_transform::binary_op(img, img2.unwrap(), "mul"),
+        "binary_op/div" => binary_op_transform::binary_op(img, img2.unwrap(), "div"),
         _ => return Err("Invalid transform".to_string()),
     };
 

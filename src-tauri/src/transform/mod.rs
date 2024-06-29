@@ -3,4 +3,4 @@ pub mod border_transform;
 pub mod color_transform;
 pub mod fft_transform;
 pub mod filter_transform;
-pub mod geometic_transform;
+pub mod geometric_transform;

@@ -26,7 +26,11 @@ import {
 
 import { FileInfoContext } from "./contexts/FileInfoContext";
 import { TabsLayoutContext } from "./contexts/TabsLayoutContext";
-import { searchTreeNodeByIdAsync } from "./utils";
+import {
+  searchTreeNodeByIdAsync,
+  searchTreeNodeInTreesById,
+  extractHistories,
+} from "./utils";
 
 const transformNameMap = {
   "color/to_gray": "转灰度",
@@ -39,6 +43,10 @@ const transformNameMap = {
   "geometric/translate": "平移",
   "geometric/mirror": "镜像",
   "geometric/stretch": "拉伸",
+  "binary_op/add": "加法",
+  "binary_op/sub": "减法",
+  "binary_op/mul": "乘法",
+  "binary_op/div": "除法",
 };
 
 const argHintMap = {
@@ -52,34 +60,10 @@ const argHintMap = {
   "geometric/translate": "输入平移距离 (格式: x,y) (单位：像素，x=y=0时为原图)",
   "geometric/mirror": "输入镜像轴 (格式: a) (其中a可选值为x或y)",
   "geometric/stretch": "输入拉伸比例 (格式: x,y) (比例，x=y=1时为原图)",
-};
-
-const extractHistories = (trees) => {
-  const traverse = (tree) => {
-    let histories = [];
-    if (tree.id !== undefined) {
-      histories.push({
-        label: tree.name,
-        value: tree.id,
-      });
-    }
-    tree.children.forEach((child) => {
-      histories = histories.concat(traverse(child));
-    });
-    return histories;
-  };
-
-  let histories = [
-    {
-      label: "...",
-      value: "...",
-    },
-  ];
-  Object.values(trees).forEach((tree) => {
-    histories = histories.concat(traverse(tree));
-  });
-  console.log(histories);
-  return histories;
+  "binary_op/add": "无需参数",
+  "binary_op/sub": "无需参数",
+  "binary_op/mul": "无需参数",
+  "binary_op/div": "无需参数",
 };
 
 function TransformDialog({
@@ -96,6 +80,9 @@ function TransformDialog({
   const [currentFile, setCurrentFile] = currentFileState;
   const [historyTrees, setHistoryTrees] = historyTreesState;
   const [layoutRef, setLayoutRef] = useState();
+
+  const [selectedImg2Id, setSelectedImg2Id] = useState(null);
+  const [selectedImg2Data, setSelectedImg2Data] = useState(null);
 
   const [transformedImg, setTransformedImg] = useState(null);
   const [transformArg, setTransformArg] = useState("");
@@ -123,7 +110,13 @@ function TransformDialog({
 
   const doTransform = async () => {
     let img = selectedTabNode.getConfig().data;
-    invoke("transform_image", { img, transform, transformArg })
+    let img2 = selectedImg2Data;
+    invoke("transform_image", {
+      img,
+      img2: img2 || "",
+      transform,
+      transformArg,
+    })
       .then((imgBase64) => {
         if (imgBase64) {
           setTransformedImg(imgBase64);
@@ -221,11 +214,30 @@ function TransformDialog({
               <Stack align="center" gap={"xs"}>
                 <IconAlertTriangleFilled size={100} color="#aaaaaa" />
                 <Badge size="xl" color="#aaaaaa">
-                  无图像，请先打开并选择图像
+                  无图像，请先选择图像
                 </Badge>
               </Stack>
             )}
           </Center>
+          {transform && transform.startsWith("binary_op") && (
+            <Center h={216} w={384} bg={"#eeeeee"}>
+              {selectedImg2Data ? (
+                <Image
+                  mah={"95%"}
+                  maw={"95%"}
+                  fit="contain"
+                  src={`data:image/bmp;base64,${selectedImg2Data}`}
+                />
+              ) : (
+                <Stack align="center" gap={"xs"}>
+                  <IconAlertTriangleFilled size={100} color="#aaaaaa" />
+                  <Badge size="xl" color="#aaaaaa">
+                    无图像，请先选择另一图像
+                  </Badge>
+                </Stack>
+              )}
+            </Center>
+          )}
           <Center>
             <IconArrowBigRight size={60} stroke={0.75} />
           </Center>
@@ -238,11 +250,7 @@ function TransformDialog({
                 maw={"95%"}
                 fit="contain"
                 // fallbackSrc={placeHolderImage}
-                src={
-                  transformedImg
-                    ? `data:image/bmp;base64,${transformedImg}`
-                    : null
-                }
+                src={`data:image/bmp;base64,${transformedImg}`}
               />
             ) : (
               <Stack align="center" gap={"xs"}>
@@ -265,8 +273,6 @@ function TransformDialog({
               setTransformArg(e.target.value);
             }}
           />
-        </Group>
-        <Group w="100%" justify="center" align="center">
           <NativeSelect
             label="输入图像"
             w="100%"
@@ -286,6 +292,29 @@ function TransformDialog({
             value={selectedTabNode ? selectedTabNode.getId() : "..."}
             data={historyList}
           />
+          {transform && transform.startsWith("binary_op") && (
+            <NativeSelect
+              label="输入另一图像"
+              w="100%"
+              onChange={(e) => {
+                setTransformedImg(null);
+                console.log(e.currentTarget.value);
+                let id = e.currentTarget.value;
+                if (id === "...") {
+                  setSelectedImg2Id(null);
+                  setSelectedImg2Data(null);
+                } else {
+                  console.log(id);
+                  console.log(Object.values(historyTrees));
+                  let treeNode = searchTreeNodeInTreesById(historyTrees, id);
+                  setSelectedImg2Id(id);
+                  setSelectedImg2Data(treeNode.metadata.img);
+                }
+              }}
+              value={selectedImg2Id || "..."}
+              data={historyList}
+            />
+          )}
           <TextInput
             label="变换后名称"
             w="100%"
@@ -310,7 +339,13 @@ function TransformDialog({
             <Button
               fullWidth
               size="sm"
-              disabled={!inProgress && transformedImg === null}
+              disabled={
+                inProgress ||
+                transformedImg === null ||
+                (transform &&
+                  transform.startsWith("binary_op") &&
+                  selectedImg2Id === null)
+              }
               onClick={confirm}
             >
               确定
