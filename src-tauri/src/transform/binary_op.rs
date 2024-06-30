@@ -98,7 +98,7 @@ fn div(img1: &RgbImage, img2: &RgbImage) -> RgbImage {
     result
 }
 
-pub fn binary_op(img1: DynamicImage, img2: DynamicImage, op: &str) -> DynamicImage {
+pub fn binary_op(img1: &DynamicImage, img2: &DynamicImage, op: &str) -> DynamicImage {
     let img1 = img1.to_rgb8();
     let img2 = img2.to_rgb8();
     let result = match op {

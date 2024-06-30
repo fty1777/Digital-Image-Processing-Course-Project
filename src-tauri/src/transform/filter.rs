@@ -1,7 +1,8 @@
-use image::{DynamicImage, GenericImageView, GrayImage, ImageBuffer, Luma, RgbImage};
+use image::{DynamicImage, GrayImage, ImageBuffer, Luma};
 use std::f32::consts::PI;
 
-use crate::transform::utils::{get_pixel_grayscale_safer}
+use crate::transform::binary_op::binary_op;
+use crate::transform::utils::{apply_kernel_i32_gray, get_pixel_grayscale};
 
 fn mean_filter(img: &GrayImage, kernel_size: u32) -> GrayImage {
     let (width, height) = img.dimensions();
@@ -17,7 +18,7 @@ fn mean_filter(img: &GrayImage, kernel_size: u32) -> GrayImage {
                 for dy in -offset..=offset {
                     let px = x as i32 + dx;
                     let py = y as i32 + dy;
-                    sum += get_pixel_grayscale_safer(img, px, py) as u32;
+                    sum += get_pixel_grayscale(img, px, py) as u32;
                     count += 1;
                 }
             }
@@ -42,7 +43,7 @@ fn median_filter(img: &GrayImage, kernel_size: u32) -> GrayImage {
                 for dy in -offset..=offset {
                     let px = x as i32 + dx;
                     let py = y as i32 + dy;
-                    window.push(get_pixel_grayscale_safer(img, px, py));
+                    window.push(get_pixel_grayscale(img, px, py));
                 }
             }
             window.sort_unstable();
@@ -91,7 +92,7 @@ fn gaussian_filter(img: &GrayImage, kernel: &[Vec<f32>]) -> GrayImage {
                 for j in 0..kernel.len() {
                     let dx = i as i32 - k as i32;
                     let dy = j as i32 - k as i32;
-                    let pixel = get_pixel_grayscale_safer(img, x as i32 + dx, y as i32 + dy);
+                    let pixel = get_pixel_grayscale(img, x as i32 + dx, y as i32 + dy);
                     sum += pixel as f32 * kernel[i][j];
                 }
             }
@@ -101,19 +102,78 @@ fn gaussian_filter(img: &GrayImage, kernel: &[Vec<f32>]) -> GrayImage {
     result
 }
 
-pub fn mean(img: DynamicImage, kernel_size: u32) -> DynamicImage {
+pub fn mean(img: &DynamicImage, kernel_size: u32) -> DynamicImage {
     let gray_image = img.to_luma8();
     DynamicImage::ImageLuma8(mean_filter(&gray_image, kernel_size))
 }
 
-pub fn median(img: DynamicImage, kernel_size: u32) -> DynamicImage {
+pub fn median(img: &DynamicImage, kernel_size: u32) -> DynamicImage {
     let gray_image = img.to_luma8();
     DynamicImage::ImageLuma8(median_filter(&gray_image, kernel_size))
 }
 
-pub fn gaussian(img: DynamicImage, kernel_size: usize, sigma: f32) -> DynamicImage {
+pub fn gaussian(img: &DynamicImage, kernel_size: usize, sigma: f32) -> DynamicImage {
     let gray_image = img.to_luma8();
     let kernel = generate_gaussian_kernel(kernel_size, sigma);
     DynamicImage::ImageLuma8(gaussian_filter(&gray_image, &kernel))
 }
 
+pub fn sobel(img: &DynamicImage, direction: &str) -> DynamicImage {
+    let img = img.to_luma8();
+    let kernel = match direction {
+        "h" => vec![vec![-1, 0, 1], vec![-2, 0, 2], vec![-1, 0, 1]],
+        "v" => vec![vec![-1, -2, -1], vec![0, 0, 0], vec![1, 2, 1]],
+        _ => vec![vec![0; 3]; 3], // Default to a null operation if no direction is specified
+    };
+    DynamicImage::ImageLuma8(apply_kernel_i32_gray(&img, &kernel))
+}
+
+pub fn laplacian(img: &DynamicImage, neighbors: u8) -> DynamicImage {
+    let img = img.to_luma8();
+    let kernel = match neighbors {
+        4 => vec![vec![0, 1, 0], vec![1, -4, 1], vec![0, 1, 0]],
+        8 => vec![vec![1, 1, 1], vec![1, -8, 1], vec![1, 1, 1]],
+        _ => vec![vec![0; 3]; 3], // Default to 4 neighbors if an invalid value is given
+    };
+    DynamicImage::ImageLuma8(apply_kernel_i32_gray(&img, &kernel))
+}
+
+pub fn prewitt(img: &DynamicImage, direction: &str) -> DynamicImage {
+    let img = img.to_luma8();
+    let kernel = match direction {
+        "h" => vec![vec![-1, 0, 1], vec![-1, 0, 1], vec![-1, 0, 1]],
+        "v" => vec![vec![-1, -1, -1], vec![0, 0, 0], vec![1, 1, 1]],
+        _ => vec![vec![0; 3]; 3], // Default to a null operation if no direction is specified
+    };
+    DynamicImage::ImageLuma8(apply_kernel_i32_gray(&img, &kernel))
+}
+
+pub fn roberts(img: &DynamicImage, direction: &str) -> DynamicImage {
+    let img = img.to_luma8();
+    let kernel = match direction {
+        "\\" => vec![vec![-1, 0], vec![0, 1]],
+        "/" => vec![vec![0, -1], vec![1, 0]],
+        _ => vec![vec![0; 2]; 2], // Default to a null operation if no direction is specified
+    };
+    DynamicImage::ImageLuma8(apply_kernel_i32_gray(&img, &kernel))
+}
+
+pub fn sobel_sharpen(img: &DynamicImage, direction: &str) -> DynamicImage {
+    let filtered_img = sobel(img, direction);
+    binary_op(img, &filtered_img, "add")
+}
+
+pub fn laplacian_sharpen(img: &DynamicImage, neighbors: u8) -> DynamicImage {
+    let filtered_img = laplacian(img, neighbors);
+    binary_op(img, &filtered_img, "add")
+}
+
+pub fn prewitt_sharpen(img: &DynamicImage, direction: &str) -> DynamicImage {
+    let filtered_img = prewitt(img, direction);
+    binary_op(img, &filtered_img, "add")
+}
+
+pub fn roberts_sharpen(img: &DynamicImage, direction: &str) -> DynamicImage {
+    let filtered_img = roberts(img, direction);
+    binary_op(img, &filtered_img, "add")
+}

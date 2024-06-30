@@ -47,6 +47,26 @@ const transformNameMap = {
   "binary_op/sub": "减法",
   "binary_op/mul": "乘法",
   "binary_op/div": "除法",
+  "filter/mean": "均值滤波",
+  "filter/gaussian": "高斯滤波",
+  "filter/median": "中值滤波",
+  "filter/sobel": "Sobel算子",
+  "filter/roberts": "Roberts算子",
+  "filter/prewitt": "Prewitt算子",
+  "filter/laplacian": "Laplacian算子",
+  "filter/sobel_sharpen": "Sobel锐化",
+  "filter/prewitt_sharpen": "Prewitt锐化",
+  "filter/laplacian_sharpen": "Laplacian锐化",
+  "filter/roberts_sharpen": "Roberts锐化",
+  "fft/dft": "DFT",
+  "fft/dft_non_shifted": "非平移DFT",
+  "fft/dft_no_log": "无值域压缩DFT",
+  "fft/idft": "iDFT",
+  "fft/idft_non_shifted": "非平移iDFT",
+  "fft/shift_to_center": "平移至中心",
+  "fft/homomorphic": "同态滤波",
+  "fft/dft_idft": "DFT+iDFT",
+  "fourier_desc": "傅里叶描述子",
 };
 
 const argHintMap = {
@@ -55,15 +75,35 @@ const argHintMap = {
   "color/to_binary": "输入阈值 (格式: x) (x取值范围为归一化后的0-1)",
   "color/exponential": "输入指数 (格式: x) (x为浮点数)",
   "color/hist_equalize": "无需参数",
-  "geometric/rotate": "输入角度 (格式: x) (单位：角度，x=360N时为原图)",
+  "geometric/rotate": "输入角度 (格式: x) (单位：角度, x=360N时为原图)",
   "geometric/resize": "输入缩放后尺寸 (格式: x,y) (单位：像素)",
-  "geometric/translate": "输入平移距离 (格式: x,y) (单位：像素，x=y=0时为原图)",
+  "geometric/translate": "输入平移距离 (格式: x,y) (单位：像素, x=y=0时为原图)",
   "geometric/mirror": "输入镜像轴 (格式: a) (其中a可选值为x或y)",
-  "geometric/stretch": "输入拉伸比例 (格式: x,y) (比例，x=y=1时为原图)",
+  "geometric/stretch": "输入拉伸比例 (格式: x,y) (比例, x=y=1时为原图)",
   "binary_op/add": "无需参数",
   "binary_op/sub": "无需参数",
   "binary_op/mul": "无需参数",
   "binary_op/div": "无需参数",
+  "filter/mean": "输入滤波器尺寸 (格式: k) (k为奇数, 单位：像素)",
+  "filter/gaussian": "输入滤波器尺寸和标准差 (格式: k,s) (k为奇数, s为浮点数)",
+  "filter/median": "输入滤波器尺寸 (格式: k) (k为奇数, 单位：像素)",
+  "filter/sobel": "输入方向 (格式: d) (d可选值为v或h)",
+  "filter/roberts": "输入方向 (格式: d) (d可选值为/或\\)",
+  "filter/prewitt": "输入方向 (格式: d) (d可选值为v或h)",
+  "filter/laplacian": "输入邻域元素个数 (格式: n) (n=4为四邻域, n=8为八邻域)",
+  "filter/sobel_sharpen": "输入方向 (格式: d) (d可选值为v或h)",
+  "filter/roberts_sharpen": "输入方向 (格式: d) (d可选值为/或\\)",
+  "filter/prewitt_sharpen": "输入方向 (格式: d) (d可选值为v或h)",
+  "filter/laplacian_sharpen": "输入邻域元素个数 (格式: n) (n=4为四邻域, n=8为八邻域)",
+  "fft/dft": "无需参数",
+  "fft/dft_non_shifted": "无需参数",
+  "fft/dft_no_log": "无值域压缩DFT",
+  "fft/idft": "无需参数",
+  "fft/idft_non_shifted": "无需参数",
+  "fft/shift_to_center": "无需参数",
+  "fft/homomorphic": "输入高斯同态滤波参数 (格式: r_l,r_h,c,d0) (r_l,r_h,c,d0为浮点数, 例: 0.3,2,2,10)",
+  "fft/dft_idft": "无需参数",
+  "fourier_desc": "输入截断项数 (格式: n) (n为整数, 例: 64)",
 };
 
 function TransformDialog({
@@ -96,13 +136,22 @@ function TransformDialog({
   ]);
 
   useEffect(() => {
+    console.log(selectedTabNode)
     if (selectedTabNode && dialogOpened) {
       setHistoryList(extractHistories(historyTrees));
       setTransformedName(
         `${selectedTabNode.getName()}-${transformNameMap[transform]}`
       );
     }
-  }, [selectedTabNode, dialogOpened]);
+  }, [dialogOpened]);
+
+  useEffect(() => {
+    if (selectedTabNode && dialogOpened) {
+      setTransformedName(
+        `${selectedTabNode.getName()}-${transformNameMap[transform]}`
+      );
+    }
+  }, [selectedTabNode])
 
   useEffect(() => {
     setLayoutRef(tabsLayoutRef);
@@ -195,8 +244,8 @@ function TransformDialog({
       centered
     >
       <Stack align="stretch">
-        <Group w={700} justify="space-between" wrap="nowrap" align="center">
-          <Center h={216} w={384} bg={"#eeeeee"}>
+        <Group w={700} justify="center" wrap="nowrap" align="center">
+          <Center h={192} w={192} bg={"#eeeeee"}>
             {selectedTabNode ? (
               <Image
                 mah={"95%"}
@@ -204,9 +253,8 @@ function TransformDialog({
                 fit="contain"
                 src={
                   selectedTabNode
-                    ? `data:image/bmp;base64,${
-                        selectedTabNode.getConfig().data
-                      }`
+                    ? `data:image/bmp;base64,${selectedTabNode.getConfig().data
+                    }`
                     : null
                 }
               />
@@ -214,13 +262,13 @@ function TransformDialog({
               <Stack align="center" gap={"xs"}>
                 <IconAlertTriangleFilled size={100} color="#aaaaaa" />
                 <Badge size="xl" color="#aaaaaa">
-                  无图像，请先选择图像
+                  请先选择图像
                 </Badge>
               </Stack>
             )}
           </Center>
           {transform && transform.startsWith("binary_op") && (
-            <Center h={216} w={384} bg={"#eeeeee"}>
+            <Center h={192} w={192} bg={"#eeeeee"}>
               {selectedImg2Data ? (
                 <Image
                   mah={"95%"}
@@ -232,16 +280,16 @@ function TransformDialog({
                 <Stack align="center" gap={"xs"}>
                   <IconAlertTriangleFilled size={100} color="#aaaaaa" />
                   <Badge size="xl" color="#aaaaaa">
-                    无图像，请先选择另一图像
+                    请先选择另一图像
                   </Badge>
                 </Stack>
               )}
             </Center>
           )}
           <Center>
-            <IconArrowBigRight size={60} stroke={0.75} />
+            <IconArrowBigRight size={40} stroke={0.75} />
           </Center>
-          <Center h={216} w={384} bg={"#eeeeee"}>
+          <Center h={192} w={192} bg={"#eeeeee"}>
             {inProgress ? (
               <Loader color="gray" />
             ) : transformedImg ? (

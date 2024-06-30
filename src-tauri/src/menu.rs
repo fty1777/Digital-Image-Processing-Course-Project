@@ -1,4 +1,4 @@
-use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
+use tauri::{CustomMenuItem, Menu, Submenu};
 
 pub fn create_menu() -> Result<Menu, String> {
     let geometric_menu = Submenu::new(
@@ -94,7 +94,11 @@ pub fn create_menu() -> Result<Menu, String> {
             ))
             .add_item(CustomMenuItem::new(
                 "fft/dft_non_shifted".to_string(),
-                "非平移DFT (non-shifted DFT)",
+                "非平移DFT",
+            ))
+            .add_item(CustomMenuItem::new(
+                "fft/dft_no_log".to_string(),
+                "无值域压缩DFT",
             ))
             .add_item(CustomMenuItem::new(
                 "fft/idft".to_string(),
@@ -102,18 +106,15 @@ pub fn create_menu() -> Result<Menu, String> {
             ))
             .add_item(CustomMenuItem::new(
                 "fft/idft_non_shifted".to_string(),
-                "非平移iDFT (non-shifted iDFT)",
+                "非平移iDFT",
             ))
+            .add_item(CustomMenuItem::new("fft/dft_idft".to_string(), "DFT+iDFT"))
             .add_item(CustomMenuItem::new(
                 "fft/shift_to_center".to_string(),
                 "平移至中心",
             ))
             .add_item(CustomMenuItem::new(
-                "fft/log_enhance".to_string(),
-                "对数增强",
-            ))
-            .add_item(CustomMenuItem::new(
-                "filter/homomorphic".to_string(),
+                "fft/homomorphic".to_string(),
                 "同态滤波",
             )),
     );

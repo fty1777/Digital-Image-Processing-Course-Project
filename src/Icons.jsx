@@ -22,7 +22,7 @@ const FileIcon = ({ filename }) => {
     case "bmp":
     case "jpg":
     case "jpeg":
-    case "raw":
+    case "png":
       return <FaFileImage color={imageFileColor} className="icon" />;
     default:
       return <FaFile color={otherFileColor} className="icon" />;

@@ -164,7 +164,8 @@ function FileExplorer() {
               if (
                 extension === "bmp" ||
                 extension === "jpg" ||
-                extension === "jpeg"
+                extension === "jpeg" ||
+                extension === "png"
               ) {
                 if (path in historyTrees) {
                   let treeNode = historyTrees[path].children[0];

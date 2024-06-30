@@ -1,7 +1,8 @@
-pub mod binary_op_transform;
-pub mod color_transform;
-pub mod fft_transform;
-pub mod filter_transform;
-pub mod geometric_transform;
+pub mod binary_op;
+pub mod color;
+pub mod fft;
+pub mod filter;
+pub mod geometric;
+pub mod fourier_desc;
 
 mod utils;
