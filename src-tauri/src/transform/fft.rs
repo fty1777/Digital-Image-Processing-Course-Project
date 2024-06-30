@@ -252,9 +252,16 @@ pub fn dft_non_shifted(img: &DynamicImage) -> DynamicImage {
     DynamicImage::ImageLuma8(output_img)
 }
 
+pub fn dft_non_shifted_no_log(img: &DynamicImage) -> DynamicImage {
+    let gray_img = img.to_luma8();
+    let output_img = apply_dft_2d_no_log(&gray_img);
+    DynamicImage::ImageLuma8(output_img)
+}
+
+
 pub fn dft_no_log(img: &DynamicImage) -> DynamicImage {
     let gray_img = img.to_luma8();
-    let output_img = apply_shift_to_center(&&apply_dft_2d_no_log(&gray_img));
+    let output_img = apply_shift_to_center(&apply_dft_2d_no_log(&gray_img));
     DynamicImage::ImageLuma8(output_img)
 }
 

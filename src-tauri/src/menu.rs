@@ -97,6 +97,10 @@ pub fn create_menu() -> Result<Menu, String> {
                 "非平移DFT",
             ))
             .add_item(CustomMenuItem::new(
+                "fft/dft_non_shifted_no_log".to_string(),
+                "非平移无值域压缩DFT",
+            ))
+            .add_item(CustomMenuItem::new(
                 "fft/dft_no_log".to_string(),
                 "无值域压缩DFT",
             ))

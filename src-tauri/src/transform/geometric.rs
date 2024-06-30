@@ -35,18 +35,22 @@ where
     let center_x = width as f32 / 2.0;
     let center_y = height as f32 / 2.0;
 
-    for (old_x, old_y, pixel) in image.pixels() {
-        let old_x = old_x as f32 - center_x;
-        let old_y = old_y as f32 - center_y;
+    for new_x in 0..width {
+        for new_y in 0..height {
+            let old_x = (new_x as f32 - center_x) * cos_angle
+                + (new_y as f32 - center_y) * sin_angle
+                + center_x;
+            let old_y = -(new_x as f32 - center_x) * sin_angle
+                + (new_y as f32 - center_y) * cos_angle
+                + center_y;
 
-        let new_x = old_x * cos_angle - old_y * sin_angle + center_x;
-        let new_y = old_x * sin_angle + old_y * cos_angle + center_y;
+            let old_x = old_x.round() as i32;
+            let old_y = old_y.round() as i32;
 
-        let new_x = new_x.round() as i32;
-        let new_y = new_y.round() as i32;
-
-        if new_x >= 0 && new_x < width as i32 && new_y >= 0 && new_y < height as i32 {
-            out.put_pixel(new_x as u32, new_y as u32, pixel);
+            if old_x >= 0 && old_x < width as i32 && old_y >= 0 && old_y < height as i32 {
+                let pixel = image.get_pixel(old_x as u32, old_y as u32);
+                out.put_pixel(new_x, new_y, pixel);
+            }
         }
     }
 
@@ -62,14 +66,18 @@ where
     let (old_w, old_h) = image.dimensions();
     let mut out = ImageBuffer::new(width, height);
 
-    for (old_x, old_y, pixel) in image.pixels() {
-        let scale_x = width as f32 / old_w as f32;
-        let scale_y = height as f32 / old_h as f32;
-
-        let new_x = (old_x as f32 * scale_x).round() as u32;
-        let new_y = (old_y as f32 * scale_y).round() as u32;
-        if new_x < width && new_y < height {
-            out.put_pixel(new_x as u32, new_y as u32, pixel);
+    for x in 0..width {
+        for y in 0..height {
+            let old_x = ((x + 1) as f32 / width as f32 * old_w as f32)
+                .clamp(1.0, old_w as f32)
+                .round() as u32
+                - 1;
+            let old_y = ((y + 1) as f32 / height as f32 * old_h as f32)
+                .clamp(1.0, old_h as f32)
+                .round() as u32
+                - 1;
+            let pixel = image.get_pixel(old_x, old_y);
+            out.put_pixel(x, y, pixel);
         }
     }
 

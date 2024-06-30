@@ -39,13 +39,13 @@ pub fn open_image(path: String) -> Result<String, String> {
 pub fn save_image(path: String, img: String) -> Result<(), String> {
     let img = image::load_from_memory(&STANDARD.decode(img).unwrap())
         .map_err(|e| format!("Failed to load image from base64: {}", e))?;
-    if (path.ends_with(".jpg") || path.ends_with(".jpeg")) {
+    if path.ends_with(".jpg") || path.ends_with(".jpeg") {
         img.save_with_format(&path, ImageFormat::Jpeg)
             .map_err(|e| format!("Failed to save image: {}", e))?;
-    } else if (path.ends_with(".png")) {
+    } else if path.ends_with(".png") {
         img.save_with_format(&path, ImageFormat::Png)
             .map_err(|e| format!("Failed to save image: {}", e))?;
-    } else if (path.ends_with(".bmp")) {
+    } else if path.ends_with(".bmp") {
         img.save_with_format(&path, ImageFormat::Bmp)
             .map_err(|e| format!("Failed to save image: {}", e))?;
     } else {
@@ -141,6 +141,7 @@ pub fn transform_image(
         "filter/prewitt_sharpen" => filter::prewitt_sharpen(&img, transform_arg.as_str()),
         "filter/roberts_sharpen" => filter::roberts_sharpen(&img, transform_arg.as_str()),
         "fft/dft" => fft::dft(&img),
+        "fft/dft_non_shifted_no_log" => fft::dft_non_shifted_no_log(&img),
         "fft/dft_non_shifted" => fft::dft_non_shifted(&img),
         "fft/dft_no_log" => fft::dft_no_log(&img),
         "fft/idft" => fft::idft(&img),
