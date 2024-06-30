@@ -12,7 +12,6 @@ function searchTreeNodeById(tree, id) {
     }
   }
 
-  console.log("mismatch", tree, id);
   return null;
 }
 async function searchTreeNodeByIdAsync(tree, id) {
@@ -67,7 +66,6 @@ const extractHistories = (trees) => {
   Object.values(trees).forEach((tree) => {
     histories = histories.concat(traverse(tree));
   });
-  console.log(histories);
   return histories;
 };
 

@@ -3,7 +3,6 @@ import { invoke } from "@tauri-apps/api/tauri";
 
 import {
   TextInput,
-  Container,
   Badge,
   Button,
   Loader,
@@ -15,11 +14,10 @@ import {
   Modal,
   Center,
 } from "@mantine/core";
-import { Actions, Layout } from "flexlayout-react";
+import { Actions } from "flexlayout-react";
 
 import {
   IconArrowBigRight,
-  IconAlertCircleFilled,
   IconAlertTriangleFilled,
   IconInfoCircleFilled,
 } from "@tabler/icons-react";
@@ -136,7 +134,6 @@ function TransformDialog({
   ]);
 
   useEffect(() => {
-    console.log(selectedTabNode)
     if (selectedTabNode && dialogOpened) {
       setHistoryList(extractHistories(historyTrees));
       setTransformedName(
@@ -191,7 +188,6 @@ function TransformDialog({
 
   const confirm = async () => {
     let nodeConfig = selectedTabNode.getConfig();
-    console.log("confirm");
     let targetTabset =
       tabsModel.getActiveTabset() || tabsModel.getFirstTabset();
     let newId = layoutRef.current
@@ -205,10 +201,6 @@ function TransformDialog({
       })
       .getId();
 
-    // openedFiles[nodeConfig.path] = newId;
-    // setOpenedFiles(openedFiles);
-
-    console.log(historyTrees[nodeConfig.path], selectedTabNode.getId());
     let parentTreeNode = await searchTreeNodeByIdAsync(
       historyTrees[nodeConfig.path],
       selectedTabNode.getId()
@@ -219,7 +211,6 @@ function TransformDialog({
       children: [],
       metadata: { img: transformedImg, path: nodeConfig.path },
     });
-    // setHistoryTrees(historyTrees);
     setCurrentFile({
       path: nodeConfig.path,
       tabId: newId,
@@ -297,7 +288,6 @@ function TransformDialog({
                 mah={"95%"}
                 maw={"95%"}
                 fit="contain"
-                // fallbackSrc={placeHolderImage}
                 src={`data:image/bmp;base64,${transformedImg}`}
               />
             ) : (
@@ -352,8 +342,6 @@ function TransformDialog({
                   setSelectedImg2Id(null);
                   setSelectedImg2Data(null);
                 } else {
-                  console.log(id);
-                  console.log(Object.values(historyTrees));
                   let treeNode = searchTreeNodeInTreesById(historyTrees, id);
                   setSelectedImg2Id(id);
                   setSelectedImg2Data(treeNode.metadata.img);

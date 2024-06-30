@@ -16,15 +16,9 @@ import "./style/Previewer.css";
 
 function Previewer() {
   const {
-    openedFolderState,
-    folderTreeState,
-    openedFilesState,
-    historyTreesState,
     currentFileState,
   } = useContext(FileInfoContext);
-  const [openedFiles, setOpenedFiles] = openedFilesState;
   const [currentFile, setCurrentFile] = currentFileState;
-  const [historyTrees, setHistoryTrees] = historyTreesState;
   const { tabsModel, tabsLayoutRef } = useContext(TabsLayoutContext);
 
   const [
@@ -42,7 +36,6 @@ function Previewer() {
     openTransformDialog();
     setSelectedTabNode(tabsModel.getActiveTabset().getSelectedNode());
     setTransform(menu_item);
-    console.log("menu_item:", menu_item);
   }
 
   const onDialogClose = () => {
@@ -65,7 +58,6 @@ function Previewer() {
     useEffect(() => {
       (async () => {
         const dims = await getImageDimensions(config.data);
-        console.log("Image Dimensions:", dims);
         setDimensions(dims);
       })();
     }, [config]);
@@ -98,7 +90,6 @@ function Previewer() {
             selectedNode === undefined ||
             selectedNode.getComponent() !== "img"
           ) {
-            console.log("No active tab");
             setCurrentFile(null);
           } else {
             tabsModel.doAction(Actions.selectTab(selectedNode.getId()));
@@ -149,22 +140,17 @@ function Previewer() {
                 path: node.getConfig().path,
                 tabId: node.getId(),
               });
-              console.log("Selected Tab:", node.getConfig().path);
             }
           } else if (action.type === "FlexLayout_SetActiveTabset") {
             let node = tabsModel.getNodeById(action.data.tabsetNode);
             let activeTab = node.getSelectedNode();
-            console.log(node);
-            console.log(activeTab);
             if (activeTab.getComponent() === "img") {
               setCurrentFile({
                 path: activeTab.getConfig().path,
                 tabId: activeTab.getId(),
               });
-              console.log("Active Tab:", activeTab.getConfig().path);
             }
           }
-          console.log("Action:", action);
           return action;
         }}
       />

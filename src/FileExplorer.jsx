@@ -95,7 +95,6 @@ function FileExplorer() {
               multiple: false,
             })
               .then((folderPath) => {
-                console.log(folderPath);
                 if (folderPath !== null) {
                   setOpenedFolder(folderPath);
                 }
@@ -158,9 +157,7 @@ function FileExplorer() {
               }
               let filename = element.name;
               let path = element.id;
-              console.log(filename, path);
               const extension = filename.slice(filename.lastIndexOf(".") + 1);
-              console.log(extension);
               if (
                 extension === "bmp" ||
                 extension === "jpg" ||

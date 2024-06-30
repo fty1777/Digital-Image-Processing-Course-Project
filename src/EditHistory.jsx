@@ -2,16 +2,12 @@ import React, { useEffect, useContext, useState } from "react";
 import { Actions } from "flexlayout-react";
 import TreeView, { flattenTree } from "react-accessible-treeview";
 
-import { FaFileImage } from "react-icons/fa6";
-
 import { FileInfoContext } from "./contexts/FileInfoContext";
 import { TabsLayoutContext } from "./contexts/TabsLayoutContext";
 import {
-  IconSquareMinus,
   IconSquarePlus,
   IconPoint,
   IconSquareMinusFilled,
-  IconArrowDownRight,
 } from "@tabler/icons-react";
 
 import { searchTreeNodeById } from "./utils";
@@ -31,9 +27,6 @@ const LeafIcon = () => <IconPoint color={iconColor} className="icon" />;
 
 function EditHistory() {
   const {
-    openedFolderState,
-    folderTreeState,
-    openedFilesState,
     historyTreesState,
     currentFileState,
   } = useContext(FileInfoContext);
@@ -41,7 +34,6 @@ function EditHistory() {
   const [historyTrees, setHistoryTrees] = historyTreesState;
   const [historyTree, setHistoryTree] = useState(null);
   const [currentFile, setCurrentFile] = currentFileState;
-  const [openedFiles, setOpenedFiles] = openedFilesState;
   const [layoutRef, setLayoutRef] = useState();
 
   useEffect(() => {
