@@ -1,8 +1,9 @@
 import React, { useContext, useState, useEffect } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
+import { save, message } from "@tauri-apps/api/dialog";
 
 import { useDisclosure } from "@mantine/hooks";
-import { Actions, Layout } from "flexlayout-react";
+import { Actions, Layout, TabNode } from "flexlayout-react";
 import "flexlayout-react/style/light.css";
 import { Stack, Center } from "@mantine/core";
 
@@ -12,12 +13,14 @@ import { FileInfoContext } from "./contexts/FileInfoContext";
 import { TabsLayoutContext } from "./contexts/TabsLayoutContext";
 import TransformDialog from "./TransformDialog";
 
+import { showPopup } from "./PopupMenu";
+
 import "./style/Previewer.css";
+import { writeBinaryFile } from "@tauri-apps/api/fs";
+import { invoke } from "@tauri-apps/api";
 
 function Previewer() {
-  const {
-    currentFileState,
-  } = useContext(FileInfoContext);
+  const { currentFileState } = useContext(FileInfoContext);
   const [currentFile, setCurrentFile] = currentFileState;
   const { tabsModel, tabsLayoutRef } = useContext(TabsLayoutContext);
 
@@ -27,6 +30,8 @@ function Previewer() {
   ] = useDisclosure(false);
   const [transform, setTransform] = useState(null);
   const [selectedTabNode, setSelectedTabNode] = useState(null);
+
+  const [showingPopupMenu, setShowingPopupMenu] = useState(false);
 
   listen("menu_event", (event) => {
     handleMenuEvent(event.payload.menu_item);
@@ -52,18 +57,65 @@ function Previewer() {
     });
   };
 
-  const ImageWithSize = ({ config }) => {
+  const ImageWithSize = ({ node }) => {
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const config = node.getConfig();
 
     useEffect(() => {
       (async () => {
         const dims = await getImageDimensions(config.data);
         setDimensions(dims);
       })();
-    }, [config]);
+    }, []);
 
     return (
-      <div className="image-container">
+      <div
+        className="image-container"
+        onContextMenu={(event) => {
+          if (showingPopupMenu) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          console.log(node, event);
+          if (node instanceof TabNode) {
+            showPopup(
+              "图片: " + node.getName(),
+              tabsLayoutRef.current.getRootDiv(),
+              event.clientX,
+              event.clientY,
+              ["保存到..."],
+              async (item) => {
+                if (item === "保存到...") {
+                  let path = await save({
+                    defaultPath: node.getName(),
+                    filters: [
+                      {
+                        name: "Image",
+                        extensions: ["bmp", "jpg", "jpeg", "png"],
+                      },
+                    ],
+                  }).catch((error) => {
+                    console.log("save error: ", error);
+                  });
+                  await invoke("save_image", {
+                    path,
+                    img: config.data,
+                  });
+                  await message(
+                    `图片"${node.getName()}"已成功保存至"${path}"`,
+                    {
+                      title: "已保存",
+                    }
+                  );
+                }
+                setShowingPopupMenu(false);
+              }
+            );
+            setShowingPopupMenu(true);
+          }
+        }}
+      >
         <img src={`data:image/bmp;base64,${config.data}`} alt={config.name} />
         <p className="image-size">
           {dimensions.width} x {dimensions.height}
@@ -99,7 +151,7 @@ function Previewer() {
             });
           }
         });
-        return <ImageWithSize config={config} />;
+        return <ImageWithSize node={node} />;
       case "file_explorer":
         return <FileExplorer />;
       case "edit_history":
@@ -124,6 +176,49 @@ function Previewer() {
         model={tabsModel}
         factory={factory}
         realtimeResize={false}
+        onContextMenu={(node, event) => {
+          if (!showingPopupMenu) {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log(node, event);
+            if (node instanceof TabNode) {
+              showPopup(
+                "图片: " + node.getName(),
+                tabsLayoutRef.current.getRootDiv(),
+                event.clientX,
+                event.clientY,
+                ["保存到..."],
+                async (item) => {
+                  if (item === "保存到...") {
+                    let path = await save({
+                      defaultPath: node.getName(),
+                      filters: [
+                        {
+                          name: "Image",
+                          extensions: ["bmp", "jpg", "jpeg", "png"],
+                        },
+                      ],
+                    }).catch((error) => {
+                      console.log("save error: ", error);
+                    });
+                    await invoke("save_image", {
+                      path,
+                      img: node.getConfig().data,
+                    });
+                    await message(
+                      `图片"${node.getName()}"已成功保存至"${path}"`,
+                      {
+                        title: "已保存",
+                      }
+                    );
+                  }
+                  setShowingPopupMenu(false);
+                }
+              );
+              setShowingPopupMenu(true);
+            }
+          }
+        }}
         onAction={(action) => {
           // This interception is before the actual action is to be applied.
           if (action.type === "FlexLayout_AddNode") {

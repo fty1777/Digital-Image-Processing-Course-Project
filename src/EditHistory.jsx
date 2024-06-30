@@ -26,10 +26,7 @@ const BranchIcon = ({ isOpen }) =>
 const LeafIcon = () => <IconPoint color={iconColor} className="icon" />;
 
 function EditHistory() {
-  const {
-    historyTreesState,
-    currentFileState,
-  } = useContext(FileInfoContext);
+  const { historyTreesState, currentFileState } = useContext(FileInfoContext);
   const { tabsModel, tabsLayoutRef } = useContext(TabsLayoutContext);
   const [historyTrees, setHistoryTrees] = historyTreesState;
   const [historyTree, setHistoryTree] = useState(null);
@@ -53,7 +50,12 @@ function EditHistory() {
   }, [currentFile, historyTrees]);
 
   return (
-    <div className="ide-container">
+    <div
+      className="ide-container"
+      onContextMenu={(e) => {
+        e.preventDefault();
+      }}
+    >
       <div className="ide">
         {historyTree ? (
           <TreeView

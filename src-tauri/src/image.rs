@@ -36,6 +36,25 @@ pub fn open_image(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+pub fn save_image(path: String, img: String) -> Result<(), String> {
+    let img = image::load_from_memory(&STANDARD.decode(img).unwrap())
+        .map_err(|e| format!("Failed to load image from base64: {}", e))?;
+    if (path.ends_with(".jpg") || path.ends_with(".jpeg")) {
+        img.save_with_format(&path, ImageFormat::Jpeg)
+            .map_err(|e| format!("Failed to save image: {}", e))?;
+    } else if (path.ends_with(".png")) {
+        img.save_with_format(&path, ImageFormat::Png)
+            .map_err(|e| format!("Failed to save image: {}", e))?;
+    } else if (path.ends_with(".bmp")) {
+        img.save_with_format(&path, ImageFormat::Bmp)
+            .map_err(|e| format!("Failed to save image: {}", e))?;
+    } else {
+        return Err("Unsupported image format".to_string());
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn transform_image(
     img: String,  // base64
     img2: String, // base64

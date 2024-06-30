@@ -30,6 +30,7 @@ fn main() {
             folder::read_folder,
             image::open_image,
             image::transform_image,
+            image::save_image,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -79,7 +79,12 @@ function FileExplorer() {
   }, [openedFolder]);
 
   return (
-    <div className="ide-container">
+    <div
+      className="ide-container"
+      onContextMenu={(e) => {
+        e.preventDefault();
+      }}
+    >
       <Flex gap="5">
         <Button
           h={30}
