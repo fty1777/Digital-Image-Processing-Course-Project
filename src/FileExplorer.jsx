@@ -171,21 +171,33 @@ function FileExplorer() {
               ) {
                 if (path in historyTrees) {
                   let treeNode = historyTrees[path].children[0];
-                  let targetTabset =
-                    tabsModel.getActiveTabset() || tabsModel.getFirstTabSet();
-                  let newId = layoutRef.current
-                    .addTabToTabSet(targetTabset.getId(), {
-                      component: "img",
-                      name: treeNode.name,
-                      config: {
-                        data: treeNode.metadata.img,
-                        path: treeNode.metadata.path,
-                      },
-                    })
-                    .getId();
-                  treeNode.id = newId;
-                  tabsModel.doAction(Actions.selectTab(openedFiles[path]));
-                  setCurrentFile({ path, tabId: openedFiles[path] });
+                  let id = treeNode.id;
+                  tabsModel.doAction(Actions.selectTab(id));
+                  let selectedNode = tabsModel
+                    .getActiveTabset()
+                    ?.getSelectedNode();
+                  if (selectedNode.getId() === id) {
+                    setCurrentFile({
+                      path,
+                      tabId: id,
+                    });
+                  } else {
+                    let targetTabset =
+                      tabsModel.getActiveTabset() || tabsModel.getFirstTabSet();
+                    let newId = layoutRef.current
+                      .addTabToTabSet(targetTabset.getId(), {
+                        component: "img",
+                        name: treeNode.name,
+                        config: {
+                          data: treeNode.metadata.img,
+                          path: treeNode.metadata.path,
+                        },
+                      })
+                      .getId();
+                    treeNode.id = newId;
+                    tabsModel.doAction(Actions.selectTab(openedFiles[path]));
+                    setCurrentFile({ path, tabId: openedFiles[path] });
+                  }
                 } else {
                   invoke("open_image", { path })
                     .then((imgBase64) => {
